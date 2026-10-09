@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Voice Assistant</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<link rel="stylesheet" href="taskpane.css">
+</head>
+<body>
+<main class="pane">
+
+  <header class="head">
+    <img src="assets/icon-32.png" alt="" width="28" height="28">
+    <div class="head-text">
+      <div class="title">AI Voice Assistant</div>
+      <div class="sub">Dictate · English (US)</div>
+    </div>
+    <button type="button" id="btnSettings" class="icon-btn" aria-label="Settings" aria-expanded="false" aria-controls="settings">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"></path></svg>
+    </button>
+  </header>
+
+  <section id="settings" class="card settings" hidden aria-labelledby="settingsTitle">
+    <h2 id="settingsTitle">Settings</h2>
+    <label for="apiKey">OpenAI API key</label>
+    <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…">
+    <label class="check"><input id="rememberKey" type="checkbox" checked> Remember on this computer</label>
+    <label for="model">Transcription model</label>
+    <select id="model">
+      <option value="gpt-4o-mini-transcribe">gpt-4o-mini-transcribe (fast, live words)</option>
+      <option value="gpt-4o-transcribe">gpt-4o-transcribe (most accurate, live words)</option>
+      <option value="whisper-1">whisper-1 (phrase at a time)</option>
+    </select>
+    <div class="row">
+      <button type="button" id="btnSaveSettings" class="btn primary">Save</button>
+      <button type="button" id="btnTestKey" class="btn">Test key</button>
+    </div>
+    <p id="settingsMsg" class="small" role="status"></p>
+    <p class="small muted">Your key is stored only in this add-in on this computer and is sent only to api.openai.com. Use a project key with a spending limit.</p>
+  </section>
+
+  <div id="status" class="card status" role="status" aria-live="polite">
+    <span id="statusDot" class="dot dot-idle" aria-hidden="true"></span>
+    <span id="statusText" class="status-text">Ready to dictate</span>
+    <span id="level" class="lvl" aria-hidden="true" hidden><span></span><span></span><span></span><span></span><span></span></span>
+    <span id="elapsed" class="mono" hidden>00:00</span>
+  </div>
+
+  <div id="alert" class="alert" role="alert" hidden>
+    <div id="alertTitle" class="alert-title"></div>
+    <div id="alertBody" class="alert-body"></div>
+    <div class="row"><button type="button" id="alertAction" class="btn primary" hidden></button></div>
+  </div>
+
+  <div class="row controls">
+    <button type="button" id="btnStart" class="btn rec big">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg>
+      <span id="startLabel">Start recording</span>
+    </button>
+    <button type="button" id="btnPause" class="btn big" hidden>Pause</button>
+    <button type="button" id="btnResume" class="btn rec big" hidden>Resume</button>
+    <button type="button" id="btnStop" class="btn big" hidden>Stop</button>
+  </div>
+
+  <div class="field">
+    <div class="field-head">
+      <label for="draft">Your text</label>
+      <span id="wordCount" class="small muted">0 words · editable</span>
+    </div>
+    <div class="editor">
+      <textarea id="draft" placeholder="Polished text appears here as you speak. You can edit it at any time."></textarea>
+      <div id="live" class="live" hidden>
+        <div class="live-head">Hearing <span id="livePending" class="pending"></span></div>
+        <div id="liveText" class="live-text">Listening…</div>
+      </div>
+    </div>
+    <p id="editedNote" class="small accent" hidden>Your edits are locked in. New speech is added after your text — never over it.</p>
+  </div>
+
+  <div id="notice" class="notice" role="status" hidden>
+    <span id="noticeText"></span>
+    <button type="button" id="btnRestore" class="btn small-btn" hidden>Put text back in editor</button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="actions">
+    <button type="button" id="btnInsert" class="btn primary big" disabled aria-describedby="insertHint">Insert into Email</button>
+    <p id="insertHint" class="small muted center">Nothing to insert yet — start recording.</p>
+    <button type="button" id="btnClear" class="link-btn" hidden>Clear text</button>
+  </div>
+
+  <footer class="foot small muted">
+    Audio is encrypted in transit (HTTPS) and sent to OpenAI for transcription. This add-in does not save recordings or transcripts.
+  </footer>
+</main>
+<script src="taskpane.js"></script>
+</body>
+</html>

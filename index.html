@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Voice Assistant — Setup</title>
+<style>
+:root{--ink:#1A1D21;--muted:#565E69;--line:#E3E6EA;--accent:#1F5FBF;--accent-dk:#174A96}
+*{box-sizing:border-box}
+body{margin:0;background:#EEF0F3;color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6}
+main{max-width:760px;margin:0 auto;padding:40px 16px 64px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:24px 28px;margin-top:20px}
+h1{font-size:28px;margin:0 0 4px;display:flex;align-items:center;gap:12px}
+h2{font-size:18px;margin:0 0 10px}
+.muted{color:var(--muted)}
+code{background:#F1F3F5;border-radius:4px;padding:1px 6px;font-family:Consolas,monospace;font-size:13px;word-break:break-all}
+ol{padding-left:22px;margin:8px 0 0}
+li{margin:6px 0}
+button{height:44px;padding:0 20px;border:none;border-radius:8px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button:hover{background:var(--accent-dk)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.warn{background:#FFF4E0;border:1px solid #F0CF8F;border-radius:8px;padding:12px 14px;margin-top:12px}
+</style>
+</head>
+<body>
+<main>
+  <h1><img src="assets/icon-64.png" alt="" width="40" height="40">AI Voice Assistant for Outlook</h1>
+  <p class="muted">Speak an email; get polished text in a side pane; insert it when you're ready.</p>
+
+  <section class="card">
+    <h2>Step 1 — Download your manifest</h2>
+    <p>This button builds a manifest that points Outlook to this site:<br><code id="base"></code></p>
+    <button type="button" id="dl">Download manifest.xml</button>
+    <div id="localWarn" class="warn" hidden>This page isn't on an HTTPS web address. Open it from your GitHub Pages address (https://…github.io/…) and download the manifest there.</div>
+  </section>
+
+  <section class="card">
+    <h2>Step 2 — Add it to Outlook</h2>
+    <ol>
+      <li>In new Outlook (or Outlook on the web), open <a href="https://aka.ms/olksideload" target="_blank" rel="noopener">aka.ms/olksideload</a> — the Add-Ins window opens.</li>
+      <li>Select <b>My add-ins</b>, scroll to <b>Custom Addins</b>, select <b>Add a custom add-in › Add from File…</b></li>
+      <li>Choose the <code>manifest.xml</code> you downloaded and confirm the install.</li>
+    </ol>
+    <p class="muted">If you don't see “Add a custom add-in”, your organization blocks custom add-ins — ask IT to deploy this manifest for you.</p>
+  </section>
+
+  <section class="card">
+    <h2>Step 3 — Use it</h2>
+    <ol>
+      <li>Start a new email or reply. On the ribbon (or the <b>Apps</b> button) select <b>Voice Assistant</b>.</li>
+      <li>First time only: open the gear icon, paste your OpenAI API key, select <b>Save</b>.</li>
+      <li>Select <b>Start recording</b>, choose <b>Allow</b> for the microphone, and talk.</li>
+      <li>Edit the text if needed, then select <b>Insert into Email</b>.</li>
+    </ol>
+  </section>
+</main>
+<script>
+(function () {
+  var base = location.href.replace(/[?#].*$/, '').replace(/index\.html$/, '').replace(/\/?$/, '/');
+  document.getElementById('base').textContent = base;
+  if (location.protocol !== 'https:') document.getElementById('localWarn').hidden = false;
+
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+  function manifest(b) {
+    b = esc(b);
+    return '<?xml version="1.0" encoding="UTF-8"?>\n' +
+'<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="MailApp">\n' +
+'  <Id>3f27f8d8-22ba-4906-8fdc-8961483e37e8</Id>\n' +
+'  <Version>1.0.0.0</Version>\n' +
+'  <ProviderName>C2 Technologies</ProviderName>\n' +
+'  <DefaultLocale>en-US</DefaultLocale>\n' +
+'  <DisplayName DefaultValue="AI Voice Assistant"/>\n' +
+'  <Description DefaultValue="Dictate an email in English and insert polished text into your draft."/>\n' +
+'  <IconUrl DefaultValue="' + b + 'assets/icon-64.png"/>\n' +
+'  <HighResolutionIconUrl DefaultValue="' + b + 'assets/icon-128.png"/>\n' +
+'  <SupportUrl DefaultValue="' + b + '"/>\n' +
+'  <Hosts>\n    <Host Name="Mailbox"/>\n  </Hosts>\n' +
+'  <Requirements>\n    <Sets>\n      <Set Name="Mailbox" MinVersion="1.5"/>\n    </Sets>\n  </Requirements>\n' +
+'  <FormSettings>\n    <Form xsi:type="ItemEdit">\n      <DesktopSettings>\n        <SourceLocation DefaultValue="' + b + 'taskpane.html"/>\n      </DesktopSettings>\n    </Form>\n  </FormSettings>\n' +
+'  <Permissions>ReadWriteItem</Permissions>\n' +
+'  <Rule xsi:type="RuleCollection" Mode="Or">\n    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Edit"/>\n  </Rule>\n' +
+'  <DisableEntityHighlighting>false</DisableEntityHighlighting>\n' +
+'  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">\n' +
+'    <Requirements>\n      <bt:Sets DefaultMinVersion="1.5">\n        <bt:Set Name="Mailbox"/>\n      </bt:Sets>\n    </Requirements>\n' +
+'    <Hosts>\n      <Host xsi:type="MailHost">\n        <DesktopFormFactor>\n' +
+'          <ExtensionPoint xsi:type="MessageComposeCommandSurface">\n' +
+'            <OfficeTab id="TabDefault">\n' +
+'              <Group id="aivaGroup">\n' +
+'                <Label resid="Group.Label"/>\n' +
+'                <Control xsi:type="Button" id="aivaOpenPane">\n' +
+'                  <Label resid="Button.Label"/>\n' +
+'                  <Supertip>\n                    <Title resid="Button.Label"/>\n                    <Description resid="Button.Tooltip"/>\n                  </Supertip>\n' +
+'                  <Icon>\n                    <bt:Image size="16" resid="Icon.16"/>\n                    <bt:Image size="32" resid="Icon.32"/>\n                    <bt:Image size="80" resid="Icon.80"/>\n                  </Icon>\n' +
+'                  <Action xsi:type="ShowTaskpane">\n                    <SourceLocation resid="Taskpane.Url"/>\n                  </Action>\n' +
+'                </Control>\n' +
+'              </Group>\n' +
+'            </OfficeTab>\n' +
+'          </ExtensionPoint>\n' +
+'        </DesktopFormFactor>\n      </Host>\n    </Hosts>\n' +
+'    <Resources>\n' +
+'      <bt:Images>\n' +
+'        <bt:Image id="Icon.16" DefaultValue="' + b + 'assets/icon-16.png"/>\n' +
+'        <bt:Image id="Icon.32" DefaultValue="' + b + 'assets/icon-32.png"/>\n' +
+'        <bt:Image id="Icon.80" DefaultValue="' + b + 'assets/icon-80.png"/>\n' +
+'      </bt:Images>\n' +
+'      <bt:Urls>\n        <bt:Url id="Taskpane.Url" DefaultValue="' + b + 'taskpane.html"/>\n      </bt:Urls>\n' +
+'      <bt:ShortStrings>\n        <bt:String id="Group.Label" DefaultValue="AI Voice"/>\n        <bt:String id="Button.Label" DefaultValue="Voice Assistant"/>\n      </bt:ShortStrings>\n' +
+'      <bt:LongStrings>\n        <bt:String id="Button.Tooltip" DefaultValue="Dictate your email and insert polished text."/>\n      </bt:LongStrings>\n' +
+'    </Resources>\n' +
+'  </VersionOverrides>\n' +
+'</OfficeApp>\n';
+  }
+
+  document.getElementById('dl').addEventListener('click', function () {
+    var blob = new Blob([manifest(base)], { type: 'application/xml' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'manifest.xml';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  });
+
+  window.__manifest = manifest;
+})();
+</script>
+</body>
+</html>
